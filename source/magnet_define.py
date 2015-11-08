@@ -1,4 +1,5 @@
 import math
+import copy
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -64,8 +65,8 @@ class MagneticCharge:
             C = rotate_z(C, cos_2, -sin_2)
             V = rotate_z(V, cos_2, -sin_2)
         C = translate(C, P)
-        print(V)
-        return C
+        # print(V)
+        return MagneticCharge(C, self.m)
         
     def __str__(self):
         return "{} at {}".format(self.m, self.c)
@@ -103,10 +104,16 @@ class Magnet:
     
     # rotates charges counterclockwise by an angle of theta through the axis defined 
     # by two coordinates A and B
-    def rotate(self, A, B, theta):
-        for charge in charges:
-            charge.rotate(A, B, theta)
+    def rotate(self, P, V, theta):
+        charges = np.array([])
+        for charge in self.charges:
+            charges = np.append(charges, charge.rotate(P, V, theta))
+        retval = copy.deepcopy(self)
+        retval.charges = charges
+        return retval
     
+    def size(self):
+        return len(self.charges)
     # adding magnets is simply defined as using both sets of charges
     def __add__(self, other):
         return Magnet(np.append(self.charges, other.charges))
