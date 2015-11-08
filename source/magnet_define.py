@@ -1,14 +1,17 @@
 import math
+
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+
 from coordinate_transform import *
 
-'''
-A single point magnetic charge is defined by a coordinate and a magnitude. 
-It induces field according to the inverse square law on distance from it.
-'''
-class magnetic_charge:
+
+class MagneticCharge:
+    '''
+    A single point magnetic charge is defined by a coordinate and a magnitude. 
+    It induces field according to the inverse square law on distance from it.
+    '''
     mu_naught = 4*math.pi*10**-7
     multiplier = 1/(4*math.pi*mu_naught)
     def __init__(self, coordinate, magnitude):
@@ -25,25 +28,59 @@ class magnetic_charge:
     # a coordinate transform by rotating by theta through an axis defined by a point P and vector V.
     # think right-hand rule for direction of rotation
     def rotate(self, P, V, theta):
-        P = np.reshape(P, (3, 1))
-        V = np.reshape(V/np.linalg.norm(V), (3, 1))
-        C = np.reshape(self.c, (3, 1))
+        #P = np.reshape(P, (3, 1))
+        #V = np.reshape(V, (3, 1))
+        #C = np.reshape(self.c, (3, 1))
+        C = self.c
         
-        return None
+        # three transformations put the axis into a convenient basis for rotation
+        # (1) translate the system so that the point P is on the origin
+        C = translate(C, -P)
+        
+        # (2) rotate the system around the Z axis so the vector of rotation lies in the XZ plane 
+        rot2 = False
+        if V[0] != 0 or V[1] != 0:
+            rot2 = True
+            denorm = np.linalg.norm(V[:2])
+            cos_2 = (V/denorm)[0]
+            sin_2 = -(V/denorm)[1]
+            C = rotate_z(C, cos_2, sin_2)
+            V = rotate_z(V, cos_2, sin_2)
+
+        # (3) rotate the system around the Y axis so the vector of rotation is in the positive Z direction
+        denorm = np.linalg.norm([V[0], V[2]])
+        cos_3 = (V/denorm)[2]
+        sin_3 = -(V/denorm)[0]
+        C = rotate_y(C, cos_3, sin_3)
+        V = rotate_y(V, cos_3, sin_3) 
+        
+        # now we can rotate by the given theta
+        C = rotate_z(C, theta=theta)
+        
+        #undo each transformation 
+        C = rotate_y(C, cos_3, -sin_3)
+        V = rotate_y(V, cos_3, -sin_3) 
+        if rot2:
+            C = rotate_z(C, cos_2, -sin_2)
+            V = rotate_z(V, cos_2, -sin_2)
+        C = translate(C, P)
+        print(V)
+        return C
         
     def __str__(self):
         return "{} at {}".format(self.m, self.c)
     def __repr__(self):
-        return "magnetic_charge({}, {})".format(self.c, self.m)
+        return "MagneticCharge({}, {})".format(self.c, self.m)
     
-'''        
-A distribution of magnetic charges which are fixed in relative position is referred to as a magnet.
-Ideally, the net magnitude of positive and negative charges within a magnet is zero, as there are no
-magnetic monopoles, but this condition is not enforced; it is up to methods in magnet_shapes, which 
-initialize specific magnet geometries, to distribute charges appropriately
-'''
-class magnet:
-    def __init__(self, charges, color = 'b'):
+
+class Magnet:
+    '''        
+    A distribution of magnetic charges which are fixed in relative position is referred to as a magnet.
+    Ideally, the net magnitude of positive and negative charges within a magnet is zero, as there are no
+    magnetic monopoles, but this condition is not enforced; it is up to methods in magnet_shapes, which 
+    initialize specific magnet geometries, to distribute charges appropriately
+    '''
+    def __init__(self, charges, color='b'):
         self.charges = np.array([])
         self.color = color
         for charge in charges:
@@ -72,14 +109,14 @@ class magnet:
     
     # adding magnets is simply defined as using both sets of charges
     def __add__(self, other):
-        return magnet(np.append(self.charges, other.charges))
+        return Magnet(np.append(self.charges, other.charges))
     def __str__(self):
         return str(self.charges)
-
-'''
-Helper method uses MatPlotLib and Axes3D to visualize the distribution of charges in 3d space. 
-'''      
+    
 def plot_magnet(magnets, max_range = .03):
+    '''
+    Helper method uses MatPlotLib and Axes3D to visualize the distribution of charges in 3d space. 
+    '''   
     fig = plt.figure(figsize=(10, 10))
     ax = fig.add_subplot(111, projection='3d')
     n = 100
@@ -103,6 +140,3 @@ def plot_magnet(magnets, max_range = .03):
     ax.set_zlabel('Z (meters)')
 
     plt.show()
-    
-tc = magnetic_charge(np.array([1, 2, 3]), 1)
-print(tc.rotate(np.array([1, 2, 3]), np.array([2, 2, 2]), 0))
