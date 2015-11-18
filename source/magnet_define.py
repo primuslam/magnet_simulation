@@ -85,8 +85,8 @@ class Magnet:
         for charge in charges:
             self.charges = np.append(self.charges, charge)
             
-    def copy(other):
-        return Magnet(other.charges, other.color)
+    def copy(self):
+        return Magnet(self.charges, self.color)
     
     def field_at(self, coordinate):
         output = np.array([0, 0, 0])
