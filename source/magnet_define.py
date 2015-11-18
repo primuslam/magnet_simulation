@@ -19,16 +19,17 @@ class MagneticCharge:
         self.c = coordinate
         self.m = magnitude
     
-    # returns a vector corresponding to the magnetic field at x, y
     def field_at(self, coordinate):
-        # print("The charge is ", self, ", the target location is", "({}, {})".format(x, y))
         dc = coordinate - self.c
         r = np.linalg.norm(dc)
         return dc*self.m*self.multiplier/r**3
         
-    # a coordinate transform by rotating by theta through an axis defined by a point P and vector V.
-    # think right-hand rule for direction of rotation
+
     def rotate(self, P, V, theta):
+        '''
+        Returns a new magnetic charge with the same magnitude rotated around
+        the axis defined by a point P and a vector V by angle theta
+        '''
         C = self.c
         
         # three transformations put the axis into a convenient basis for rotation
@@ -85,41 +86,40 @@ class Magnet:
             self.charges = np.append(self.charges, charge)
             
     def copy(other):
-        return __init__(other.charges, other.color)
+        return Magnet(other.charges, other.color)
     
-    # returns a vector corresponding to the superimposed magnetic field at x, y
     def field_at(self, coordinate):
         output = np.array([0, 0, 0])
         for charge in self.charges:
             output = output + charge.field_at(coordinate)
         return output
         
-    # returns a vector corresponding to the sum of the vector forces on another magnet 
-    # by summing the forces on each of its charges
     def force_on(self, other):
         output = np.array([0, 0, 0])
         for charge in other.charges:
             output = output + charge.m*self.field_at(charge.c)
         return output
     
-    # rotates charges counterclockwise by an angle of theta through the axis defined 
-    # by two coordinates A and B
     def rotate(self, P, V, theta):
         charges = np.array([]);
         for charge in self.charges:
             charges = np.append(charges, charge.rotate(P, V, theta))
-        retval = copy.deepcopy(self)
-        retval.charges = charges
-        return retval
+        # retval = Magnet.copy(self)
+        self.charges = charges
+        return self
+        
     def invert(self):
         for charge in self.charges:
             charge.m = -charge.m
         return self
+        
     def size(self):
         return len(self.charges)
-    # adding magnets is simply defined as using both sets of charges
+   
     def __add__(self, other):
-        return Magnet(np.append(self.charges, other.charges))
+        self.charges = np.append(self.charges, other.charges)
+        return self
+        
     def __str__(self):
         return str(self.charges)
     
