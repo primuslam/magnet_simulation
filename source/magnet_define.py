@@ -29,9 +29,6 @@ class MagneticCharge:
     # a coordinate transform by rotating by theta through an axis defined by a point P and vector V.
     # think right-hand rule for direction of rotation
     def rotate(self, P, V, theta):
-        #P = np.reshape(P, (3, 1))
-        #V = np.reshape(V, (3, 1))
-        #C = np.reshape(self.c, (3, 1))
         C = self.c
         
         # three transformations put the axis into a convenient basis for rotation
@@ -65,7 +62,7 @@ class MagneticCharge:
             C = rotate_z(C, cos_2, -sin_2)
             V = rotate_z(V, cos_2, -sin_2)
         C = translate(C, P)
-        # print(V)
+
         return MagneticCharge(C, self.m)
         
     def __str__(self):
@@ -87,6 +84,9 @@ class Magnet:
         for charge in charges:
             self.charges = np.append(self.charges, charge)
             
+    def copy(other):
+        return __init__(other.charges, other.color)
+    
     # returns a vector corresponding to the superimposed magnetic field at x, y
     def field_at(self, coordinate):
         output = np.array([0, 0, 0])
@@ -105,13 +105,16 @@ class Magnet:
     # rotates charges counterclockwise by an angle of theta through the axis defined 
     # by two coordinates A and B
     def rotate(self, P, V, theta):
-        charges = np.array([])
+        charges = np.array([]);
         for charge in self.charges:
             charges = np.append(charges, charge.rotate(P, V, theta))
         retval = copy.deepcopy(self)
         retval.charges = charges
         return retval
-    
+    def invert(self):
+        for charge in self.charges:
+            charge.m = -charge.m
+        return self
     def size(self):
         return len(self.charges)
     # adding magnets is simply defined as using both sets of charges

@@ -3,9 +3,6 @@ import math
 import numpy as np
 from magnet_define import *
 
-#Constants for accuracy and runtime parameters
-
-
 class MagnetRing(Magnet):
     def __init__(self, center, r1, r2, b, density=5, **kwargs):
         Magnet.__init__(self, np.array([]), **kwargs)
@@ -33,13 +30,13 @@ class MagnetCylinder(Magnet):
         self.charges = mag.charges
         
 class MagnetRectangle(Magnet):
-    def __init__(self, b, corner, width, length, DENSITY=5, **kwargs):
+    def __init__(self, b, corner, width, length, density=5, **kwargs):
         Magnet.__init__(self, np.array([]), **kwargs)
-        x = width/(4*DENSITY)
-        y = length/(4*DENSITY)
+        x = width/(4*density)
+        y = length/(4*density)
         area = x*y
         magnitude = b*area
-        for i in range(4*DENSITY):
-            for j in range(4*DENSITY):
+        for i in range(4*density):
+            for j in range(4*density):
                 coordinate = corner + np.array([x/2 + i*x, y/2 + j*y, 0])
                 self.charges = np.append(self.charges, MagneticCharge(coordinate, magnitude)) 
